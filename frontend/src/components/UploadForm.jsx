@@ -33,7 +33,6 @@ export default function UploadForm() {
         method: 'POST',
         body: formData,
       });
-
       const data = await response.json();
       setMessage(data.message || 'Upload successful');
     } catch (error) {
