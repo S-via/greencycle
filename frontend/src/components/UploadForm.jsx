@@ -29,7 +29,7 @@ export default function UploadForm() {
     formData.append('image', fileSelect);
 
     try {
-      const response = await fetch('http://localhost:5000/uploaded', {
+      const response = await fetch('https://greencycle-ncy0.onrender.com/', {
         method: 'POST',
         body: formData,
       });
