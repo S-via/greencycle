@@ -36,7 +36,7 @@ class User():
 with app.app_context():
     db.create_all()
 
-@app.route('/uploaded', methods=['POST'])
+@app.route('/', methods=['POST'])
 def upload_image():
     if 'image' not in request.files:
         return jsonify({'message': 'No image uploaded'}), 400
