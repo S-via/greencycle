@@ -34,7 +34,10 @@ export default function UploadForm() {
         body: formData,
       });
       const data = await response.json();
-      setMessage(data.message || 'Upload successful');
+      const message = data.message.split('<br>').map((line, index) => (
+        <p key={index}>{line}</p>
+      ))
+      setMessage(message || 'Upload successful');
     } catch (error) {
       console.error(error);
       setMessage('Upload failed. Please try again.');

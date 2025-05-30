@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from PIL import Image
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from recyclingGuide import RECYCLING_GUIDE
 
 app = Flask(__name__)
 CORS(app) # allow requests from React frontend
@@ -45,15 +46,20 @@ def upload_image():
     mime = image_file.mimetype
 
     try:
+        
         # Read image data as bytes
         image_bytes = image_file.read()
-        
         # Save to database
         new_image = Image(data=image_bytes, file_name=file_name, mimetype=mime)
         db.session.add(new_image)
         db.session.commit()
+        print("test")
+        # analyze image 
         
-        return jsonify({'message': "Image saved."})
+        # find category
+        category = "battery"
+        
+        return jsonify({'message': f"Image saved. <br> Category: {category}<br> Instruction:<br> {RECYCLING_GUIDE[category]}"})
 
     except Exception as e:
         return jsonify({'message': f"Error: {str(e)}"}), 500
