@@ -36,8 +36,11 @@ class User():
 with app.app_context():
     db.create_all()
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET','POST'])
 def upload_image():
+    if request.method == 'GET':
+        return jsonify({'message': 'GreenCycle upload endpoint is active'}), 200
+    
     if 'image' not in request.files:
         return jsonify({'message': 'No image uploaded'}), 400
 
