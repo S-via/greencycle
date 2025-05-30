@@ -10,7 +10,7 @@ function App() {
           Upload Your Photo
           
         </h1>
-        <p><UploadForm/></p>
+        <UploadForm/>
        
       </header>
     </div>
