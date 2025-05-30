@@ -2,8 +2,7 @@ from flask import Flask, request, jsonify
 from PIL import Image
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-app = Flask(__name__)
-CORS(app)
+
 
 app = Flask(__name__)
 CORS(app) # allow requests from React frontend
