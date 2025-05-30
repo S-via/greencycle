@@ -2,41 +2,16 @@ from keras.applications.mobilenet_v2 import MobileNetV2
 from keras.applications.mobilenet_v2 import preprocess_input
 from keras.applications.mobilenet_v2 import decode_predictions
 from keras.preprocessing import image
-from imageio import imread
 import numpy as np
 
-
-
-# data1 =imread('shih-tzu.png')
-# model = MobileNetV2(weights='imagenet')
-# data1 = np.empty((1, 224, 224, 3))
-
-# output_neuron = np.argmax(predictions[0])
-# print('Most active neuron: {} ({:.2f}%)'.format(
-#     output_neuron,
-#     100 * predictions[0][output_neuron]
-# ))
-
-# data = preprocess_input(data1)
-# predictions = model.predict(data)
-# print('Shape: {}'.format(predictions.shape))
-
-# for name, desc, score in decode_predictions(predictions)[0]:
-#     print('- {} ({:.2f}%%)'.format(desc, 100 * score))
-
 model = MobileNetV2(weights='imagenet')
+data = np.empty((1, 224, 224, 3))
+img_path = 'dataset/train/battery/000027.jpg'
+testImage = image.load_img(img_path, target_size=(224, 224))
+data[0] = image.img_to_array(testImage)
+data = preprocess_input(data)
+predictions = model.predict(data)
 
-img_path = 'FhoX46hXoAMeroM.jpg'  # Change this to your image file
-img = image.load_img(img_path, target_size=(224, 224))
-img_array = image.img_to_array(img)
-img_array = np.expand_dims(img_array, axis=0)
-img_array = preprocess_input(img_array)
-
-# Predict the object
-predictions = model.predict(img_array)
-decoded = decode_predictions(predictions, top=3)[0]
-
-# Display the predictions
-for i, (imagenet_id, label, prob) in enumerate(decoded):
-    print(f"{i+1}: {label} ({prob*100:.2f}%)")
+for name, desc, score in decode_predictions(predictions)[0]:
+    print('- {} ({:.2f}%%)'.format(desc, 100 * score))
 
