@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from PIL import Image
+from PIL import Image as Pilimage
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from recyclingGuide import RECYCLING_GUIDE
@@ -41,47 +41,58 @@ class User():
 with app.app_context():
     db.create_all()
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/uploaded', methods=['GET','POST'])
 def upload_image():
     if request.method == 'GET':
         return jsonify({'message': 'GreenCycle upload endpoint is active'}), 200
+    if request.method == 'POST':
+        if 'image' not in request.files:
+            return jsonify({'message': 'No image uploaded'}), 400
+
+        image_file = request.files['image']
+        file_name = image_file.filename
+        mime = image_file.mimetype
+
+        try:
+            
+            # Read image data as bytes
+            image_bytes = image_file.read()
+            # Save to database
+            new_image = Image(data=image_bytes, file_name=file_name, mimetype=mime)
+            db.session.add(new_image)
+            db.session.commit()
+            print("test")
+            # analyze image 
+            # Convert binary data to PIL Image
+            img_pil = Pilimage.open(io.BytesIO(new_image.data)).convert('RGB')
+            print(img_pil)
+            model = keras.models.load_model("recycler_model.h5")
+            # Convert to array and prepare for prediction
+            # Resize to 224x224
+            img_resized = img_pil.resize((224, 224))
+
+            # Convert to NumPy array
+            img_array = np.array(img_resized)
+
+            # Normalize if needed (depending on your model's preprocessing)
+            img_array = img_array / 255.0
+
+            # Add batch dimension
+            img_array = np.expand_dims(img_array, axis=0)  # Shape: (1, 224, 224, 3)
+
+            # Predict
+            predictions = model.predict(img_array)
+            predicted_class = class_names[np.argmax(predictions[0])]
+
+            print("Predicted class:", predicted_class)
+            # find category
+            category = predicted_class
+            
+            return jsonify({'message': f"Image saved. <br> Category: {category}<br> Instruction:<br> {RECYCLING_GUIDE[category]}"})
+
+        except Exception as e:
+            return jsonify({'message': f"Error: {str(e)}"}), 500
     
-    if 'image' not in request.files:
-        return jsonify({'message': 'No image uploaded'}), 400
-
-    image_file = request.files['image']
-    file_name = image_file.filename
-    mime = image_file.mimetype
-
-    try:
-        
-        # Read image data as bytes
-        image_bytes = image_file.read()
-        # Save to database
-        new_image = Image(data=image_bytes, file_name=file_name, mimetype=mime)
-        db.session.add(new_image)
-        db.session.commit()
-        print("test")
-        # analyze image 
-        # Convert binary data to PIL Image
-        img_pil = Image.open(io.BytesIO(new_image.data)).convert('RGB')
-        model = keras.models.load_model("recycler_model.h5")
-        # Convert to array and prepare for prediction
-        img_array = image.img_to_array(img_pil)
-        img_array = np.expand_dims(img_array, axis=0)  # Shape: (1, 224, 224, 3)
-
-        # Predict
-        predictions = model.predict(img_array)
-        predicted_class = class_names[np.argmax(predictions[0])]
-
-        print("Predicted class:", predicted_class)
-        # find category
-        category = predicted_class
-        
-        return jsonify({'message': f"Image saved. <br> Category: {category}<br> Instruction:<br> {RECYCLING_GUIDE[category]}"})
-
-    except Exception as e:
-        return jsonify({'message': f"Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
