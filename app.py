@@ -3,14 +3,18 @@ from PIL import Image
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from recyclingGuide import RECYCLING_GUIDE
-
+from tensorflow import keras
+from tensorflow.keras.preprocessing import image
+import numpy as np
+import tensorflow as tf
+import io
 
 app = Flask(__name__)
 CORS(app) # allow requests from React frontend
 # initialize database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///greencycle.db'
 db = SQLAlchemy(app)
-
+class_names = ['battery', 'cardboard', 'cigarette', 'diaper', 'electronics', 'food_waste', 'glass']
 # model
 """
 Examples for mimetype
@@ -59,9 +63,20 @@ def upload_image():
         db.session.commit()
         print("test")
         # analyze image 
-        
+        # Convert binary data to PIL Image
+        img_pil = Image.open(io.BytesIO(new_image.data)).convert('RGB')
+        model = keras.models.load_model("recycler_model.h5")
+        # Convert to array and prepare for prediction
+        img_array = image.img_to_array(img_pil)
+        img_array = np.expand_dims(img_array, axis=0)  # Shape: (1, 224, 224, 3)
+
+        # Predict
+        predictions = model.predict(img_array)
+        predicted_class = class_names[np.argmax(predictions[0])]
+
+        print("Predicted class:", predicted_class)
         # find category
-        category = "battery"
+        category = predicted_class
         
         return jsonify({'message': f"Image saved. <br> Category: {category}<br> Instruction:<br> {RECYCLING_GUIDE[category]}"})
 
